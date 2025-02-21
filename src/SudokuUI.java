@@ -1,6 +1,11 @@
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 import java.awt.*;
 
@@ -18,7 +23,7 @@ public class SudokuUI {
 
     private JFrame frame;
     private JTextField[][] cells = new JTextField[GRID_SIZE][GRID_SIZE];
-    private JPanel boardPanel, buttonPanel, difficultyPanel;
+    private JPanel boardPanel, buttonPanel;
     private JLabel statusLabel;
 
     class RoundedBorder extends AbstractBorder {
@@ -51,29 +56,61 @@ public class SudokuUI {
         JPanel difficultyPanel = new JPanel(new GridBagLayout());
         difficultyPanel.setBackground(BACKGROUND_COLOR);
         GridBagConstraints gbc = new GridBagConstraints();
-        
+
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridx = 0;
-        gbc.gridy = GridBagConstraints.RELATIVE;
-        gbc.insets = new Insets(10, 0, 10, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1.0;  
+        gbc.weighty = 1.0;
+        gbc.insets = new Insets(10, 20, 10, 20);
 
         JButton easyButton = createStyledButton("Easy");
         JButton mediumButton = createStyledButton("Medium");
         JButton hardButton = createStyledButton("Hard");
 
+        // Initial button size (adjusted dynamically later)
+        Dimension buttonSize = new Dimension(200, 50);
+        easyButton.setPreferredSize(buttonSize);
+        mediumButton.setPreferredSize(buttonSize);
+        hardButton.setPreferredSize(buttonSize);
+
         easyButton.addActionListener(e -> startGame());
         mediumButton.addActionListener(e -> startGame());
         hardButton.addActionListener(e -> startGame());
 
+        gbc.gridy = 0;
         difficultyPanel.add(easyButton, gbc);
+
+        gbc.gridy = 1;
         difficultyPanel.add(mediumButton, gbc);
+
+        gbc.gridy = 2;
         difficultyPanel.add(hardButton, gbc);
 
         frame.getContentPane().removeAll();
         frame.getContentPane().setLayout(new GridBagLayout());
-        frame.getContentPane().add(difficultyPanel);
-        frame.getContentPane().setBackground(BACKGROUND_COLOR); 
+        frame.getContentPane().add(difficultyPanel, new GridBagConstraints());
+        frame.getContentPane().setBackground(BACKGROUND_COLOR);
+
+        // Add a listener to resize buttons dynamically
+        frame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                int width = frame.getWidth();
+                int height = frame.getHeight();
+
+                // Set button size dynamically based on screen size
+                int buttonWidth = Math.max(width / 5, 200);  // At least 200px wide
+                int buttonHeight = Math.max(height / 15, 50); // At least 50px tall
+                
+                Dimension newSize = new Dimension(buttonWidth, buttonHeight);
+                easyButton.setPreferredSize(newSize);
+                mediumButton.setPreferredSize(newSize);
+                hardButton.setPreferredSize(newSize);
+
+                difficultyPanel.revalidate();
+                difficultyPanel.repaint();
+            }
+        });
 
         frame.revalidate();
         frame.repaint();

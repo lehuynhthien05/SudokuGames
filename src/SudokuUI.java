@@ -28,6 +28,10 @@ public class SudokuUI {
     private JPanel boardPanel, buttonPanel, difficultyPanel;
     private JLabel statusLabel;
 
+    Algorithm algorithm = new Algorithm();
+    char[][] board = new char[GRID_SIZE][GRID_SIZE];
+
+
     class RoundedBorder extends AbstractBorder {
     private int radius;
 
@@ -142,7 +146,7 @@ public class SudokuUI {
         JButton eraseButton = createStyledButton("Erase");
         JButton draftButton = createStyledButton("Draft");
         JButton validateButton = createStyledButton("Validate");
-        
+
         statusLabel = new JLabel(" ", SwingConstants.CENTER);
         statusLabel.setForeground(TEXT_COLOR);
 
@@ -154,7 +158,7 @@ public class SudokuUI {
         buttonPanel.add(eraseButton);
         buttonPanel.add(draftButton);
         buttonPanel.add(validateButton);
-        
+
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 JTextField cell = new JTextField();
@@ -162,7 +166,7 @@ public class SudokuUI {
                 cell.setFont(new Font("Arial", Font.BOLD, 20));
                 cell.setForeground(TEXT_COLOR);
                 cell.setBackground(LIGHT_BG);
-                
+
                 boolean isTop = (row % SUBGRID_SIZE == 0);
                 boolean isLeft = (col % SUBGRID_SIZE == 0);
                 boolean isBottom = ((row + 1) % SUBGRID_SIZE == 0);
@@ -183,18 +187,39 @@ public class SudokuUI {
                 cell.addKeyListener(new KeyListener() {
                     @Override
                     public void keyTyped(KeyEvent e) {
-
                     }
 
                     @Override
                     public void keyPressed(KeyEvent e) {
-
                     }
 
                     @Override
                     public void keyReleased(KeyEvent e) {
-                        if (!isDraftMode) {
-                            validateSudoku();
+                        try {
+                            String text = cell.getText();
+                            if (text.length() == 1 && Character.isDigit(text.charAt(0))) {
+                                int num = text.charAt(0) - '0';
+                                int row = -1, col = -1;
+                                for (int r = 0; r < GRID_SIZE; r++) {
+                                    for (int c = 0; c < GRID_SIZE; c++) {
+                                        if (cells[r][c] == cell) {
+                                            row = r;
+                                            col = c;
+                                            break;
+                                        }
+                                    }
+                                    if (row != -1) break;
+                                }
+                                if (algorithm.isValid(board, row, col, (char) ('0' + num))) {
+                                    cell.setBackground(LIGHT_BG);
+                                } else {
+                                    cell.setBackground(Color.RED);
+                                }
+                            } else {
+                                cell.setBackground(LIGHT_BG);
+                            }
+                        } catch (IllegalArgumentException ex) {
+                            System.err.println("Invalid range: " + ex.getMessage());
                         }
                     }
                 });
@@ -206,6 +231,24 @@ public class SudokuUI {
         frame.add(statusLabel, BorderLayout.SOUTH);
         frame.revalidate();
         frame.repaint();
+
+        // Generate random numbers for easy level
+
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                board[row][col] = '.';
+            }
+        }
+        SudokuGenerator generator = new SudokuGenerator();
+        generator.generateRandomNumbers(board, algorithm);
+
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                if (board[row][col] != '.') {
+                    cells[row][col].setText(String.valueOf(board[row][col]));
+                }
+            }
+        }
     }
 
     public void toggleDraftMode() {

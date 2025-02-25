@@ -4,7 +4,7 @@ import java.util.Random;
 
 public class Hint {
     private final Algorithm algorithm;
-    private static final Color HINT_COLOR = new Color(212, 239, 223); // Light Green
+    private static final Color HINT_COLOR = new Color(212, 239, 223);
 
     public Hint(Algorithm algorithm) {
         this.algorithm = algorithm;

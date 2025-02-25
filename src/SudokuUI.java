@@ -29,6 +29,8 @@ public class SudokuUI {
     private JLabel statusLabel;
 
     Algorithm algorithm = new Algorithm();
+    Hint hint = new Hint(algorithm);
+    Undo undo = new Undo();
     char[][] board = new char[GRID_SIZE][GRID_SIZE];
 
 
@@ -149,7 +151,21 @@ public class SudokuUI {
 
         statusLabel = new JLabel(" ", SwingConstants.CENTER);
         statusLabel.setForeground(TEXT_COLOR);
+        hintButton.addActionListener(e -> {
+            if (hint.provideHint(board, cells, undo)) {
+                statusLabel.setText("Hint provided.");
+            } else {
+                statusLabel.setText("No hints available.");
+            }
+        });
 
+        undoButton.addActionListener(e -> {
+            if (undo.undo(board, cells)) {
+                statusLabel.setText("Undo successful.");
+            } else {
+                statusLabel.setText("Nothing to undo.");
+            }
+        });
         validateButton.addActionListener(e -> validateSudoku());
         draftButton.addActionListener(e -> toggleDraftMode());
 
@@ -314,6 +330,7 @@ public class SudokuUI {
         }
 
     }
+    
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(SudokuUI::new);

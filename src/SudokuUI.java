@@ -1,5 +1,7 @@
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -21,10 +23,21 @@ public class SudokuUI {
     private static final Color INCORRECT_COLOR = new Color(255, 111, 97); // Coral
     private static final Color BUTTON_COLOR = new Color(125, 90, 80); // Muted Brown
 
+    private boolean isDraftMode = false;
+    private String[][] draftValues = new String[GRID_SIZE][GRID_SIZE];
+    private boolean[][] validatedCells = new boolean[GRID_SIZE][GRID_SIZE];
+
+
     private JFrame frame;
     private JTextField[][] cells = new JTextField[GRID_SIZE][GRID_SIZE];
     private JPanel boardPanel, buttonPanel;
     private JLabel statusLabel;
+
+    Algorithm algorithm = new Algorithm();
+    Hint hint = new Hint(algorithm);
+    Undo undo = new Undo();
+    char[][] board = new char[GRID_SIZE][GRID_SIZE];
+
 
     class RoundedBorder extends AbstractBorder {
     private int radius;
@@ -172,18 +185,33 @@ public class SudokuUI {
         JButton eraseButton = createStyledButton("Erase");
         JButton draftButton = createStyledButton("Draft");
         JButton validateButton = createStyledButton("Validate");
-        
+
         statusLabel = new JLabel(" ", SwingConstants.CENTER);
         statusLabel.setForeground(TEXT_COLOR);
+        hintButton.addActionListener(e -> {
+            if (hint.provideHint(board, cells, undo)) {
+                statusLabel.setText("Hint provided.");
+            } else {
+                statusLabel.setText("No hints available.");
+            }
+        });
 
+        undoButton.addActionListener(e -> {
+            if (undo.undo(board, cells)) {
+                statusLabel.setText("Undo successful.");
+            } else {
+                statusLabel.setText("Nothing to undo.");
+            }
+        });
         validateButton.addActionListener(e -> validateSudoku());
+        draftButton.addActionListener(e -> toggleDraftMode());
 
         buttonPanel.add(hintButton);
         buttonPanel.add(undoButton);
         buttonPanel.add(eraseButton);
         buttonPanel.add(draftButton);
         buttonPanel.add(validateButton);
-        
+
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 JTextField cell = new JTextField();
@@ -191,7 +219,7 @@ public class SudokuUI {
                 cell.setFont(new Font("Arial", Font.BOLD, 20));
                 cell.setForeground(TEXT_COLOR);
                 cell.setBackground(LIGHT_BG);
-                
+
                 boolean isTop = (row % SUBGRID_SIZE == 0);
                 boolean isLeft = (col % SUBGRID_SIZE == 0);
                 boolean isBottom = ((row + 1) % SUBGRID_SIZE == 0);
@@ -208,6 +236,46 @@ public class SudokuUI {
 
                 cells[row][col] = cell;
                 boardPanel.add(cell);
+
+                cell.addKeyListener(new KeyListener() {
+                    @Override
+                    public void keyTyped(KeyEvent e) {
+                    }
+
+                    @Override
+                    public void keyPressed(KeyEvent e) {
+                    }
+
+                    @Override
+                    public void keyReleased(KeyEvent e) {
+                        try {
+                            String text = cell.getText();
+                            if (text.length() == 1 && Character.isDigit(text.charAt(0))) {
+                                int num = text.charAt(0) - '0';
+                                int row = -1, col = -1;
+                                for (int r = 0; r < GRID_SIZE; r++) {
+                                    for (int c = 0; c < GRID_SIZE; c++) {
+                                        if (cells[r][c] == cell) {
+                                            row = r;
+                                            col = c;
+                                            break;
+                                        }
+                                    }
+                                    if (row != -1) break;
+                                }
+                                if (algorithm.isValid(board, row, col, (char) ('0' + num))) {
+                                    cell.setBackground(LIGHT_BG);
+                                } else {
+                                    cell.setBackground(Color.RED);
+                                }
+                            } else {
+                                cell.setBackground(LIGHT_BG);
+                            }
+                        } catch (IllegalArgumentException ex) {
+                            System.err.println("Invalid range: " + ex.getMessage());
+                        }
+                    }
+                });
             }
         }
 
@@ -216,32 +284,90 @@ public class SudokuUI {
         frame.add(statusLabel, BorderLayout.SOUTH);
         frame.revalidate();
         frame.repaint();
+
+        // Generate random numbers for easy level
+
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                board[row][col] = '.';
+            }
+        }
+        SudokuGenerator generator = new SudokuGenerator();
+        generator.generateRandomNumbers(board, algorithm);
+
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                if (board[row][col] != '.') {
+                    cells[row][col].setText(String.valueOf(board[row][col]));
+                }
+            }
+        }
+    }
+
+    public void toggleDraftMode() {
+        isDraftMode = !isDraftMode;
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                JTextField cell = cells[row][col];
+                if (isDraftMode) {
+                    if (!validatedCells[row][col]) {
+                        cell.setFont(new Font("Arial", Font.ITALIC, 16));
+                        cell.setForeground(Color.GRAY);
+                    }
+                } else {
+                    if (cell.getText().isEmpty() && draftValues[row][col] != null) {
+                        cell.setText(draftValues[row][col]);
+                        cell.setFont(new Font("Arial", Font.ITALIC, 16));
+                        cell.setForeground(Color.GRAY);
+                    } else {
+                        cell.setFont(new Font("Arial", Font.BOLD, 22));
+                        cell.setForeground(TEXT_COLOR);
+                    }
+                }
+            }
+        }
+        if (!isDraftMode) {
+            validateSudoku(); // Auto validate when exiting draft mode
+        }
     }
 
     private void validateSudoku() {
+        if (isDraftMode) {
+            toggleDraftMode();  // Exit draft mode
+            return;  // Avoid validate twice
+        }
+
         char[][] board = new char[GRID_SIZE][GRID_SIZE];
-        
+
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 String text = cells[row][col].getText().trim();
                 board[row][col] = text.isEmpty() ? '.' : text.charAt(0);
             }
         }
-        
+
         Algorithm algorithm = new Algorithm();
         boolean isValid = algorithm.isValidSudoku(board);
-        
+
         JOptionPane.showMessageDialog(
-            frame, 
-            isValid ? "Congratulations! The Sudoku is valid!" : "Oops! The Sudoku is invalid.", 
-            "Validation Result", 
+            frame,
+            isValid ? "Congratulations! The Sudoku is valid!" : "Oops! The Sudoku is invalid.",
+            "Validation Result",
             isValid ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE
         );
 
-        if (isValid){
-            setupDifficultySelection();
+        if (isValid) {
+            for (int row = 0; row < GRID_SIZE; row++) {
+                for (int col = 0; col < GRID_SIZE; col++) {
+                    if (board[row][col] != '.') {
+                        validatedCells[row][col] = true;
+                    }
+                }
+            }
         }
+
     }
+    
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(SudokuUI::new);

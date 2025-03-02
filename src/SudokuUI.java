@@ -35,6 +35,7 @@ public class SudokuUI {
     Hint hint = new Hint(algorithm);
     Undo undo = new Undo();
     Draft draft = new Draft();
+    Music music = new Music();
     char[][] board = new char[GRID_SIZE][GRID_SIZE];
 
 
@@ -178,13 +179,22 @@ public class SudokuUI {
         boardPanel = new JPanel(new GridLayout(GRID_SIZE, GRID_SIZE));
         boardPanel.setBackground(BACKGROUND_COLOR);
         buttonPanel = new JPanel(new GridLayout(3, 3, 5, 5)); // Adjusted with spacing
+        buttonPanel.setPreferredSize(new Dimension(200, 200));
         buttonPanel.setBackground(BACKGROUND_COLOR);
     
         JButton hintButton = createStyledButton("Hint");
         JButton undoButton = createStyledButton("Undo");
         JButton eraseButton = createStyledButton("Erase");
         JButton draftButton = createStyledButton("Draft");
-    
+        JButton musicButton = createStyledButton("Music");
+
+        Dimension buttonSize = new Dimension(100, 30);
+        hintButton.setPreferredSize(buttonSize);
+        undoButton.setPreferredSize(buttonSize);
+        eraseButton.setPreferredSize(buttonSize);
+        draftButton.setPreferredSize(buttonSize);
+        musicButton.setPreferredSize(buttonSize);
+
         statusLabel = new JLabel(" ", SwingConstants.CENTER);
         statusLabel.setForeground(TEXT_COLOR);
 
@@ -209,12 +219,17 @@ public class SudokuUI {
         });
     
         draftButton.addActionListener(e -> draft.toggleDraftMode());
+
         eraseButton.addActionListener(e -> {
             if (selectedCell != null) {
                 selectedCell.setText("");
             }
         });
-    
+
+        musicButton.addActionListener(e -> {
+            music.toggleMusic("src/music.wav");
+        });
+
         for (int i = 1; i <= 9; i++) {
             JButton digitButton = createStyledButton(String.valueOf(i));
             int digit = i;
@@ -321,12 +336,16 @@ public class SudokuUI {
         }
     
         JPanel sidePanel = new JPanel(new BorderLayout());
-        JPanel buttonContainer = new JPanel(new GridLayout(4, 1));
+        JPanel buttonContainer = new JPanel(new GridLayout(5, 1, 5, 5));
+        buttonContainer.setPreferredSize(new Dimension(100, 150));
+        buttonContainer.setBackground(BACKGROUND_COLOR);
+
         buttonContainer.add(hintButton);
         buttonContainer.add(undoButton);
         buttonContainer.add(eraseButton);
         buttonContainer.add(draftButton);
-    
+        buttonContainer.add(musicButton);
+
         sidePanel.add(buttonPanel, BorderLayout.CENTER);
         sidePanel.add(buttonContainer, BorderLayout.SOUTH);
     

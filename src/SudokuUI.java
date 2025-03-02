@@ -7,34 +7,34 @@ import java.awt.event.ComponentEvent;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
+import java.util.ArrayList;
 
 
 public class SudokuUI {
-    private static final int GRID_SIZE = 9;
+    public static final int GRID_SIZE = 9;
     private static final int SUBGRID_SIZE = 3;
     private static final int CELL_SIZE = 50;
     private static final Color LIGHT_BG = new Color(250, 243, 224); // Cream Background
     private static final Color GRID_COLOR = new Color(125, 90, 80); // Muted Brown
     private static final Color HIGHLIGHT_COLOR = new Color(212, 239, 223); // Light Green
     private static final Color BACKGROUND_COLOR = new Color(250, 243, 224); // Cream
-    private static final Color TEXT_COLOR = new Color(44, 62, 80); // Dark Blue
+    public static final Color TEXT_COLOR = new Color(44, 62, 80); // Dark Blue
     private static final Color INCORRECT_COLOR = new Color(255, 111, 97); // Coral
     private static final Color BUTTON_COLOR = new Color(125, 90, 80); // Muted Brown
 
-    private boolean isDraftMode = false;
-    private String[][] draftValues = new String[GRID_SIZE][GRID_SIZE];
-    private boolean[][] validatedCells = new boolean[GRID_SIZE][GRID_SIZE];
-
 
     private JFrame frame;
-    private JTextField[][] cells = new JTextField[GRID_SIZE][GRID_SIZE];
+    public static JTextField[][] cells = new JTextField[GRID_SIZE][GRID_SIZE];
     private JPanel boardPanel, buttonPanel;
     private JLabel statusLabel;
+    public static JLabel draftStatusLabel;
+    public static boolean[][] validatedCells = new boolean[GRID_SIZE][GRID_SIZE];
+
 
     Algorithm algorithm = new Algorithm();
     Hint hint = new Hint(algorithm);
     Undo undo = new Undo();
+    Draft draft = new Draft();
     char[][] board = new char[GRID_SIZE][GRID_SIZE];
 
 
@@ -187,7 +187,11 @@ public class SudokuUI {
     
         statusLabel = new JLabel(" ", SwingConstants.CENTER);
         statusLabel.setForeground(TEXT_COLOR);
-    
+
+        draftStatusLabel = new JLabel("Draft Mode: OFF", SwingConstants.CENTER);
+        draftStatusLabel.setForeground(Color.RED);
+        frame.add(draftStatusLabel, BorderLayout.NORTH);
+
         hintButton.addActionListener(e -> {
             if (hint.provideHint(board, cells, undo)) {
                 statusLabel.setText("Hint provided.");
@@ -204,7 +208,7 @@ public class SudokuUI {
             }
         });
     
-        draftButton.addActionListener(e -> toggleDraftMode());
+        draftButton.addActionListener(e -> draft.toggleDraftMode());
         eraseButton.addActionListener(e -> {
             if (selectedCell != null) {
                 selectedCell.setText("");
@@ -224,9 +228,53 @@ public class SudokuUI {
         
             digitButton.addActionListener(e -> {
                 if (selectedCell != null) {
-                    selectedCell.setText(String.valueOf(digit));
-                    selectedCell.setBackground(LIGHT_BG);
+                    int row = -1;
+                    int col = -1;
+
+                    // Search for the selected cell in the cells array
+                    for (int r = 0; r < GRID_SIZE; r++) {
+                        for (int c = 0; c < GRID_SIZE; c++) {
+                            if (cells[r][c] == selectedCell) {
+                                row = r;
+                                col = c;
+                                break;
+                            }
+                        }
+                        if (row != -1) {
+                            break;  // Exit the outer loop if cell found
+                        }
+                    }
+
+                    if (row != -1 && col != -1) {  // Cell found
+                        String digitStr = String.valueOf(digit);
+
+                        // Validate if not in draft mode
+                        if (!draft.isDraftMode()) {
+                            selectedCell.setText(String.valueOf(digit));
+                            selectedCell.setBackground(LIGHT_BG);
+                            validateSudoku();
+                        } else {
+                            // Draft mode
+                            if (!validatedCells[row][col]) {
+                                ArrayList<String> currentDrafts = draft.getDraftValues(row, col);
+
+                                // If digit already exists in drafts, remove it
+                                if (currentDrafts.contains(digitStr)) {
+                                    draft.removeDraftValue(row, col, digitStr);
+                                } else {
+                                    // Otherwise add it
+                                    draft.addDraftValue(row, col, digitStr);
+                                }
+
+                                // Update the cell's display with formatted draft values
+                                selectedCell.setText(draft.formatDraftValues(row, col));
+                                selectedCell.setFont(new Font("Arial", Font.ITALIC, 12));
+                                selectedCell.setForeground(Color.BLUE);
+                            }
+                        }
+                    }
                 }
+
             });
         
             buttonPanel.add(digitButton);
@@ -305,40 +353,18 @@ public class SudokuUI {
                 }
             }
         }
-    }
 
-    public void toggleDraftMode() {
-        isDraftMode = !isDraftMode;
+        // set the initial cells as validated
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
-                JTextField cell = cells[row][col];
-                if (isDraftMode) {
-                    if (!validatedCells[row][col]) {
-                        cell.setFont(new Font("Arial", Font.ITALIC, 16));
-                        cell.setForeground(Color.GRAY);
-                    }
-                } else {
-                    if (cell.getText().isEmpty() && draftValues[row][col] != null) {
-                        cell.setText(draftValues[row][col]);
-                        cell.setFont(new Font("Arial", Font.ITALIC, 16));
-                        cell.setForeground(Color.GRAY);
-                    } else {
-                        cell.setFont(new Font("Arial", Font.BOLD, 22));
-                        cell.setForeground(TEXT_COLOR);
-                    }
+                if (board[row][col] != '.') {
+                    validatedCells[row][col] = true;
                 }
             }
-        }
-        if (!isDraftMode) {
-            validateSudoku(); // Auto validate when exiting draft mode
         }
     }
 
     private void validateSudoku() {
-        if (isDraftMode) {
-            toggleDraftMode();  // Exit draft mode
-            return;  // Avoid validate twice
-        }
 
         char[][] board = new char[GRID_SIZE][GRID_SIZE];
 
@@ -370,7 +396,6 @@ public class SudokuUI {
         }
 
     }
-    
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(SudokuUI::new);

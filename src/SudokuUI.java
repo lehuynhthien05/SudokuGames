@@ -363,7 +363,7 @@ public class SudokuUI {
             }
         }
         SudokuGenerator generator = new SudokuGenerator();
-        generator.generateRandomNumbers(board, algorithm);
+        generator.generateSudoku(board);
 
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {

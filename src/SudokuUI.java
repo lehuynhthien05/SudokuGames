@@ -222,9 +222,23 @@ public class SudokuUI {
 
         eraseButton.addActionListener(e -> {
             if (selectedCell != null) {
-                selectedCell.setText("");
+                String erasedValue = selectedCell.getText().trim();
+        
+                selectedCell.setText(""); 
+                selectedCell.setBackground(BACKGROUND_COLOR);
+        
+                if (!erasedValue.isEmpty()) { // Only proceed if there was a value
+                    for (int row = 0; row < GRID_SIZE; row++) {
+                        for (int col = 0; col < GRID_SIZE; col++) {
+                            if (cells[row][col].getText().trim().equals(erasedValue)) {
+                                cells[row][col].setBackground(BACKGROUND_COLOR);
+                            }
+                        }
+                    }
+                }
             }
         });
+        
 
         musicButton.addActionListener(e -> {
             music.toggleMusic("src/music.wav");
@@ -355,8 +369,6 @@ public class SudokuUI {
         frame.revalidate();
         frame.repaint();
 
-        // Generate random numbers for easy level
-
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 board[row][col] = '.';
@@ -373,7 +385,6 @@ public class SudokuUI {
             }
         }
 
-        // set the initial cells as validated
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 if (board[row][col] != '.') {
@@ -384,37 +395,29 @@ public class SudokuUI {
     }
 
     private void validateSudoku() {
-
         char[][] board = new char[GRID_SIZE][GRID_SIZE];
-
+    
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 String text = cells[row][col].getText().trim();
                 board[row][col] = text.isEmpty() ? '.' : text.charAt(0);
             }
         }
-
+    
         Algorithm algorithm = new Algorithm();
-        boolean isValid = algorithm.isValidSudoku(board);
-
-        JOptionPane.showMessageDialog(
-            frame,
-            isValid ? "Congratulations! The Sudoku is valid!" : "Oops! The Sudoku is invalid.",
-            "Validation Result",
-            isValid ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE
-        );
-
-        if (isValid) {
-            for (int row = 0; row < GRID_SIZE; row++) {
-                for (int col = 0; col < GRID_SIZE; col++) {
-                    if (board[row][col] != '.') {
-                        validatedCells[row][col] = true;
-                    }
+        boolean[][] invalidCells = algorithm.getInvalidCells(board);
+        // Change color for invalid cells
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                if (invalidCells[row][col]) {
+                    cells[row][col].setBackground(INCORRECT_COLOR); // Highlight invalid cells
+                } else {
+                    cells[row][col].setBackground(BACKGROUND_COLOR); // Reset valid cells
                 }
             }
         }
-
     }
+    
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(SudokuUI::new);

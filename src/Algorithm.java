@@ -77,4 +77,44 @@ public class Algorithm {
         }
         return true;
     }
+
+    public boolean[][] getInvalidCells(char[][] board) {
+        boolean[][] invalidCells = new boolean[9][9];
+    
+        for (int row = 0; row < 9; row++) {
+            for (int col = 0; col < 9; col++) {
+                if (!isValidPlacement(board, row, col)) { // Implement this method
+                    invalidCells[row][col] = true;
+                }
+            }
+        }
+        return invalidCells;
+    }
+    
+    // Checks if placing board[row][col] is valid
+    private boolean isValidPlacement(char[][] board, int row, int col) {
+        char num = board[row][col];
+        if (num == '.') return true; // Empty cell is always valid
+    
+        // Check row
+        for (int i = 0; i < 9; i++) {
+            if (i != col && board[row][i] == num) return false;
+        }
+    
+        // Check column
+        for (int i = 0; i < 9; i++) {
+            if (i != row && board[i][col] == num) return false;
+        }
+    
+        // Check 3x3 box
+        int startRow = (row / 3) * 3, startCol = (col / 3) * 3;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                int r = startRow + i, c = startCol + j;
+                if ((r != row || c != col) && board[r][c] == num) return false;
+            }
+        }
+        return true;
+    }
+    
 }

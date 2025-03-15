@@ -33,7 +33,7 @@ public class Hint {
         ArrayList<int[]> availableHints = new ArrayList<>();
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
-                if (board[row][col] != '.') {
+                if (board[row][col] == '.') {
                     availableHints.add(new int[] { row, col });
                 }
             }

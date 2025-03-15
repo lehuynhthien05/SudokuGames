@@ -204,7 +204,8 @@ public class SudokuUI {
 
         hintButton.addActionListener(e -> {
             if (hint.provideHint(board, cells, undo)) {
-                statusLabel.setText("Hint provided.");
+                statusLabel.setText("Hint provided. Hints remaining: " + hint.getHintsRemaining());
+                
             } else {
                 statusLabel.setText("No hints available.");
             }
@@ -223,7 +224,6 @@ public class SudokuUI {
         eraseButton.addActionListener(e -> {
             if (selectedCell != null) {
                 String erasedValue = selectedCell.getText().trim();
-        
                 selectedCell.setText(""); 
                 selectedCell.setBackground(BACKGROUND_COLOR);
         
@@ -276,7 +276,6 @@ public class SudokuUI {
 
                     if (row != -1 && col != -1) {  // Cell found
                         String digitStr = String.valueOf(digit);
-
                         // Validate if not in draft mode
                         if (!draft.isDraftMode()) {
                             selectedCell.setText(String.valueOf(digit));
@@ -381,7 +380,6 @@ public class SudokuUI {
         for (int i = 0; i < GRID_SIZE; i++) {
         initialSolution[i] = board[i].clone();}
         hint.setInitialSolution(initialSolution);
-
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 if (board[row][col] != '.') {

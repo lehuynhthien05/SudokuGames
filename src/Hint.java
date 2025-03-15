@@ -21,7 +21,6 @@ public class Hint {
             this.initialSolution[i] = solution[i].clone();
         }
     }
-
     public boolean provideHint(char[][] board, JTextField[][] cells, Undo undo) {
         if (hintsRemaining <= 0) {
             return false;

@@ -348,6 +348,7 @@ public class SudokuUI {
                 });
             }
         }
+        
     
         JPanel sidePanel = new JPanel(new BorderLayout());
         JPanel buttonContainer = new JPanel(new GridLayout(5, 1, 5, 5));
@@ -376,6 +377,10 @@ public class SudokuUI {
         }
         SudokuGenerator generator = new SudokuGenerator();
         generator.generateSudoku(board);
+        char[][] initialSolution = new char[GRID_SIZE][GRID_SIZE];
+        for (int i = 0; i < GRID_SIZE; i++) {
+        initialSolution[i] = board[i].clone();}
+        hint.setInitialSolution(initialSolution);
 
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
@@ -393,6 +398,7 @@ public class SudokuUI {
             }
         }
     }
+    
 
     private void validateSudoku() {
         char[][] board = new char[GRID_SIZE][GRID_SIZE];

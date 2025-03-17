@@ -9,7 +9,7 @@ public class SudokuGenerator {
         removeNumbers(board);
     }
 
-    private boolean fillBoard(char[][] board) {
+    public boolean fillBoard(char[][] board) {
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 if (board[row][col] == '.') {
@@ -29,7 +29,7 @@ public class SudokuGenerator {
         return true;
     }
 
-    private void removeNumbers(char[][] board) {
+    public void removeNumbers(char[][] board) {
         int cellsToRemove = 40; // Number of cells to remove for the puzzle
         while (cellsToRemove > 0) {
             int row = random.nextInt(GRID_SIZE);

@@ -9,7 +9,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
-
 public class SudokuUI {
     public static final int GRID_SIZE = 9;
     private static final int SUBGRID_SIZE = 3;
@@ -22,14 +21,12 @@ public class SudokuUI {
     private static final Color INCORRECT_COLOR = new Color(255, 111, 97); // Coral
     private static final Color BUTTON_COLOR = new Color(125, 90, 80); // Muted Brown
 
-
     private JFrame frame;
     public static JTextField[][] cells = new JTextField[GRID_SIZE][GRID_SIZE];
     private JPanel boardPanel, buttonPanel;
     private JLabel statusLabel;
     public static JLabel draftStatusLabel;
     public static boolean[][] validatedCells = new boolean[GRID_SIZE][GRID_SIZE];
-
 
     Algorithm algorithm = new Algorithm();
     Hint hint = new Hint(algorithm);
@@ -38,23 +35,22 @@ public class SudokuUI {
     Music music = new Music();
     char[][] board = new char[GRID_SIZE][GRID_SIZE];
 
-
     class RoundedBorder extends AbstractBorder {
-    private int radius;
+        private int radius;
 
-    public RoundedBorder(int radius) {
-        this.radius = radius;
-    }
+        public RoundedBorder(int radius) {
+            this.radius = radius;
+        }
 
-    @Override
-    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-        Graphics2D g2d = (Graphics2D) g.create();
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2d.setColor(new Color(125, 90, 80));
-        g2d.draw(new RoundRectangle2D.Double(x, y, width - 1, height - 1, radius, radius));
-        g2d.dispose();
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setColor(new Color(125, 90, 80));
+            g2d.draw(new RoundRectangle2D.Double(x, y, width - 1, height - 1, radius, radius));
+            g2d.dispose();
+        }
     }
-}
 
     public SudokuUI() {
         frame = new JFrame("Sudoku Game");
@@ -72,7 +68,7 @@ public class SudokuUI {
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridx = 0;
-        gbc.weightx = 1.0;  
+        gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.insets = new Insets(10, 20, 10, 20);
 
@@ -112,9 +108,9 @@ public class SudokuUI {
                 int height = frame.getHeight();
 
                 // Set button size dynamically based on screen size
-                int buttonWidth = Math.max(width / 5, 200);  // At least 200px wide
+                int buttonWidth = Math.max(width / 5, 200); // At least 200px wide
                 int buttonHeight = Math.max(height / 15, 50); // At least 50px tall
-                
+
                 Dimension newSize = new Dimension(buttonWidth, buttonHeight);
                 easyButton.setPreferredSize(newSize);
                 mediumButton.setPreferredSize(newSize);
@@ -139,25 +135,25 @@ public class SudokuUI {
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setColor(new Color(200, 150, 100));
                     g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
-                    
+
                     g2.dispose();
                 }
                 super.paintComponent(g);
             }
-    
+
             @Override
             protected void paintBorder(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-    
+
                 // Border color
                 g2.setColor(new Color(150, 100, 80));
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 30, 30);
-    
+
                 g2.dispose();
             }
         };
-    
+
         button.setFocusPainted(false);
         button.setContentAreaFilled(false);
         button.setOpaque(false);
@@ -165,7 +161,7 @@ public class SudokuUI {
         button.setFont(new Font("Arial", Font.BOLD, 18));
         button.setForeground(Color.WHITE);
         button.setPreferredSize(new Dimension(200, 50));
-    
+
         return button;
     }
 
@@ -175,13 +171,13 @@ public class SudokuUI {
         frame.getContentPane().removeAll();
         frame.getContentPane().setLayout(new BorderLayout());
         frame.repaint();
-    
+
         boardPanel = new JPanel(new GridLayout(GRID_SIZE, GRID_SIZE));
         boardPanel.setBackground(BACKGROUND_COLOR);
         buttonPanel = new JPanel(new GridLayout(3, 3, 5, 5)); // Adjusted with spacing
         buttonPanel.setPreferredSize(new Dimension(200, 200));
         buttonPanel.setBackground(BACKGROUND_COLOR);
-    
+
         JButton hintButton = createStyledButton("Hint");
         JButton undoButton = createStyledButton("Undo");
         JButton eraseButton = createStyledButton("Erase");
@@ -204,12 +200,13 @@ public class SudokuUI {
 
         hintButton.addActionListener(e -> {
             if (hint.provideHint(board, cells, undo)) {
-                statusLabel.setText("Hint provided.");
+                statusLabel.setText("Hint provided. Hints remaining: " + hint.getHintsRemaining());
+
             } else {
                 statusLabel.setText("No hints available.");
             }
         });
-    
+
         undoButton.addActionListener(e -> {
             if (undo.undo(board, cells)) {
                 statusLabel.setText("Undo successful.");
@@ -217,28 +214,55 @@ public class SudokuUI {
                 statusLabel.setText("Nothing to undo.");
             }
         });
-    
+
         draftButton.addActionListener(e -> draft.toggleDraftMode());
 
         eraseButton.addActionListener(e -> {
             if (selectedCell != null) {
-                String erasedValue = selectedCell.getText().trim();
-        
-                selectedCell.setText(""); 
-                selectedCell.setBackground(BACKGROUND_COLOR);
-        
-                if (!erasedValue.isEmpty()) { // Only proceed if there was a value
-                    for (int row = 0; row < GRID_SIZE; row++) {
-                        for (int col = 0; col < GRID_SIZE; col++) {
-                            if (cells[row][col].getText().trim().equals(erasedValue)) {
-                                cells[row][col].setBackground(BACKGROUND_COLOR);
+                int row = -1;
+                int col = -1;
+
+                for (int r = 0; r < GRID_SIZE; r++) {
+                    for (int c = 0; c < GRID_SIZE; c++) {
+                        if (cells[r][c] == selectedCell) {
+                            row = r;
+                            col = c;
+                            break;
+                        }
+                    }
+                    if (row != -1) {
+                        break;
+                    }
+                }
+
+                if (row != -1 && col != -1) {
+
+                    if (validatedCells[row][col]) {
+                        statusLabel.setText("Cannot erase a fixed cell.");
+                        return;
+                    }
+
+                    String prevValue = selectedCell.getText();
+                    Color prevColor = selectedCell.getBackground();
+                    undo.addAction(row, col, prevValue, prevColor);
+
+                    String erasedValue = selectedCell.getText().trim();
+                    selectedCell.setText("");
+                    selectedCell.setBackground(BACKGROUND_COLOR);
+                    board[row][col] = '.';
+
+                    if (!erasedValue.isEmpty()) {
+                        for (int r = 0; r < GRID_SIZE; r++) {
+                            for (int c = 0; c < GRID_SIZE; c++) {
+                                if (cells[r][c].getText().trim().equals(erasedValue)) {
+                                    cells[r][c].setBackground(BACKGROUND_COLOR);
+                                }
                             }
                         }
                     }
                 }
             }
         });
-        
 
         musicButton.addActionListener(e -> {
             music.toggleMusic("src/music.wav");
@@ -247,14 +271,14 @@ public class SudokuUI {
         for (int i = 1; i <= 9; i++) {
             JButton digitButton = createStyledButton(String.valueOf(i));
             int digit = i;
-        
+
             digitButton.setPreferredSize(new Dimension(50, 50)); // Adjust button size
             digitButton.setFocusPainted(false);
             digitButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+
             // Rounded button effect
             digitButton.setBorder(new RoundedBorder(15));
-        
+
             digitButton.addActionListener(e -> {
                 if (selectedCell != null) {
                     int row = -1;
@@ -270,13 +294,12 @@ public class SudokuUI {
                             }
                         }
                         if (row != -1) {
-                            break;  // Exit the outer loop if cell found
+                            break; // Exit the outer loop if cell found
                         }
                     }
 
-                    if (row != -1 && col != -1) {  // Cell found
+                    if (row != -1 && col != -1) { // Cell found
                         String digitStr = String.valueOf(digit);
-
                         // Validate if not in draft mode
                         if (!draft.isDraftMode()) {
                             selectedCell.setText(String.valueOf(digit));
@@ -305,10 +328,10 @@ public class SudokuUI {
                 }
 
             });
-        
+
             buttonPanel.add(digitButton);
         }
-    
+
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 JTextField cell = new JTextField();
@@ -318,24 +341,24 @@ public class SudokuUI {
                 cell.setBackground(LIGHT_BG);
                 cell.setCaretColor(new Color(0, 0, 0, 0));
                 cell.setCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
-    
+
                 boolean isTop = (row % SUBGRID_SIZE == 0);
                 boolean isLeft = (col % SUBGRID_SIZE == 0);
                 boolean isBottom = ((row + 1) % SUBGRID_SIZE == 0);
                 boolean isRight = ((col + 1) % SUBGRID_SIZE == 0);
                 int borderSize = 3;
                 int thinBorder = 1;
-    
+
                 cell.setBorder(BorderFactory.createMatteBorder(
                         isTop ? borderSize : thinBorder,
                         isLeft ? borderSize : thinBorder,
                         isBottom ? borderSize : thinBorder,
                         isRight ? borderSize : thinBorder,
                         GRID_COLOR));
-    
+
                 cells[row][col] = cell;
                 boardPanel.add(cell);
-    
+
                 cell.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
@@ -348,7 +371,7 @@ public class SudokuUI {
                 });
             }
         }
-    
+
         JPanel sidePanel = new JPanel(new BorderLayout());
         JPanel buttonContainer = new JPanel(new GridLayout(5, 1, 5, 5));
         buttonContainer.setPreferredSize(new Dimension(100, 150));
@@ -362,7 +385,7 @@ public class SudokuUI {
 
         sidePanel.add(buttonPanel, BorderLayout.CENTER);
         sidePanel.add(buttonContainer, BorderLayout.SOUTH);
-    
+
         frame.add(boardPanel, BorderLayout.CENTER);
         frame.add(sidePanel, BorderLayout.EAST);
         frame.add(statusLabel, BorderLayout.SOUTH);
@@ -375,8 +398,13 @@ public class SudokuUI {
             }
         }
         SudokuGenerator generator = new SudokuGenerator();
-        generator.generateSudoku(board);
-
+        generator.fillBoard(board);
+        char[][] initialSolution = new char[GRID_SIZE][GRID_SIZE];
+        for (int i = 0; i < GRID_SIZE; i++) {
+            initialSolution[i] = board[i].clone();
+        }
+        hint.setInitialSolution(initialSolution);
+        generator.removeNumbers(board);
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 if (board[row][col] != '.') {
@@ -396,14 +424,14 @@ public class SudokuUI {
 
     private void validateSudoku() {
         char[][] board = new char[GRID_SIZE][GRID_SIZE];
-    
+
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 String text = cells[row][col].getText().trim();
                 board[row][col] = text.isEmpty() ? '.' : text.charAt(0);
             }
         }
-    
+
         Algorithm algorithm = new Algorithm();
         boolean[][] invalidCells = algorithm.getInvalidCells(board);
         // Change color for invalid cells
@@ -417,7 +445,6 @@ public class SudokuUI {
             }
         }
     }
-    
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(SudokuUI::new);

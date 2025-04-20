@@ -82,9 +82,13 @@ public class SudokuUI {
         mediumButton.setPreferredSize(buttonSize);
         hardButton.setPreferredSize(buttonSize);
 
-        easyButton.addActionListener(e -> startGame());
-        mediumButton.addActionListener(e -> startGame());
-        hardButton.addActionListener(e -> startGame());
+        easyButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        mediumButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        hardButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        easyButton.addActionListener(e -> startGame(45));
+        mediumButton.addActionListener(e -> startGame(30));
+        hardButton.addActionListener(e -> startGame(15));
 
         gbc.gridy = 0;
         difficultyPanel.add(easyButton, gbc);
@@ -167,7 +171,7 @@ public class SudokuUI {
 
     private JTextField selectedCell = null; // Track the selected cell
 
-    private void startGame() {
+    private void startGame(int cellsToShow) {
         frame.getContentPane().removeAll();
         frame.getContentPane().setLayout(new BorderLayout());
         frame.repaint();
@@ -404,7 +408,7 @@ public class SudokuUI {
             initialSolution[i] = board[i].clone();
         }
         hint.setInitialSolution(initialSolution);
-        generator.removeNumbers(board);
+        generator.removeNumbers(board, cellsToShow);
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 if (board[row][col] != '.') {

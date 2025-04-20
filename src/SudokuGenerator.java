@@ -4,9 +4,9 @@ public class SudokuGenerator {
     private static final int GRID_SIZE = 9;
     private final Random random = new Random();
 
-    public void generateSudoku(char[][] board) {
+    public void generateSudoku(char[][] board, int cellsToShow) {
         fillBoard(board);
-        removeNumbers(board);
+        removeNumbers(board, cellsToShow);
     }
 
     public boolean fillBoard(char[][] board) {
@@ -29,8 +29,8 @@ public class SudokuGenerator {
         return true;
     }
 
-    public void removeNumbers(char[][] board) {
-        int cellsToRemove = 40; // Number of cells to remove for the puzzle
+    public void removeNumbers(char[][] board, int cellsToShow) {
+        int cellsToRemove = GRID_SIZE * GRID_SIZE - cellsToShow;
         while (cellsToRemove > 0) {
             int row = random.nextInt(GRID_SIZE);
             int col = random.nextInt(GRID_SIZE);

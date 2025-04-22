@@ -10,6 +10,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 public class SudokuUI {
+    private int mistakeCount = 0;
     public static final int GRID_SIZE = 9;
     private static final int SUBGRID_SIZE = 3;
     private static final int CELL_SIZE = 50;
@@ -87,8 +88,8 @@ public class SudokuUI {
         hardButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         easyButton.addActionListener(e -> startGame(45));
-        mediumButton.addActionListener(e -> startGame(30));
-        hardButton.addActionListener(e -> startGame(15));
+        mediumButton.addActionListener(e -> startGame(40));
+        hardButton.addActionListener(e -> startGame(35));
 
         gbc.gridy = 0;
         difficultyPanel.add(easyButton, gbc);
@@ -438,14 +439,25 @@ public class SudokuUI {
 
         Algorithm algorithm = new Algorithm();
         boolean[][] invalidCells = algorithm.getInvalidCells(board);
-        // Change color for invalid cells
+
+        boolean hasMistake = false;
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 if (invalidCells[row][col]) {
-                    cells[row][col].setBackground(INCORRECT_COLOR); // Highlight invalid cells
+                    cells[row][col].setBackground(INCORRECT_COLOR);
+                    hasMistake = true;
                 } else {
-                    cells[row][col].setBackground(BACKGROUND_COLOR); // Reset valid cells
+                    cells[row][col].setBackground(BACKGROUND_COLOR);
                 }
+            }
+        }
+
+        if (hasMistake) {
+            mistakeCount++; // Tăng số lần sai
+            statusLabel.setText("Mistakes: " + mistakeCount + "/3");
+            if (mistakeCount >= 3) {
+                JOptionPane.showMessageDialog(frame, "Game Over!", "Game Over", JOptionPane.ERROR_MESSAGE);
+                frame.dispose();
             }
         }
     }
